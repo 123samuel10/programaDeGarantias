@@ -56,20 +56,31 @@ class GarantiaController extends Controller
 
         $q = Garantia::query()->with(['cliente', 'producto']);
 
-        if ($buscar = $request->get('buscar')) {
-            $buscar = addcslashes($buscar, '%_');
+     if ($buscar = $request->get('buscar')) {
+    $buscar = addcslashes($buscar, '%_');
 
-            $q->where(function ($qq) use ($buscar) {
-                $qq->where('numero_serie', 'like', "%{$buscar}%")
-                    ->orWhere('estado', 'like', "%{$buscar}%")
-                    ->orWhereHas('cliente', function ($c) use ($buscar) {
-                        $c->where('nombre_contacto', 'like', "%{$buscar}%")
-                          ->orWhere('empresa', 'like', "%{$buscar}%")
-                          ->orWhere('email', 'like', "%{$buscar}%")
-                          ->orWhere('documento', 'like', "%{$buscar}%");
-                    });
-            });
-        }
+    $q->where(function ($qq) use ($buscar) {
+        $qq->where('numero_serie', 'like', "%{$buscar}%")
+          ->orWhere('estado', 'like', "%{$buscar}%")
+
+          ->orWhereHas('cliente', function ($c) use ($buscar) {
+              $c->where('nombre_contacto', 'like', "%{$buscar}%")
+                ->orWhere('empresa', 'like', "%{$buscar}%")
+                ->orWhere('email', 'like', "%{$buscar}%")
+                ->orWhere('documento', 'like', "%{$buscar}%");
+          })
+
+          // ✅ NUEVO: buscar por producto
+          ->orWhereHas('producto', function ($p) use ($buscar) {
+              $p->where('nombre_producto', 'like', "%{$buscar}%")
+                ->orWhere('marca', 'like', "%{$buscar}%")
+                ->orWhere('modelo', 'like', "%{$buscar}%")
+                ->orWhere('descripcion', 'like', "%{$buscar}%")
+                ->orWhere('tipo_equipo', 'like', "%{$buscar}%");
+          });
+    });
+}
+
 
         if ($estado = $request->get('estado')) {
             $q->where('estado', $estado);
