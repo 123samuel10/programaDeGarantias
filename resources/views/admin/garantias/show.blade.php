@@ -50,36 +50,71 @@
         'rechazada' => 'bg-red-50 text-red-700 border-red-100',
     ];
 
-    // ✅ Catálogo PRO (SÍ cubre / NO cubre)
+    /**
+     * ==========================
+     * ✅ CATÁLOGO PRO (DENTRO DEL SHOW)
+     * Basado en tu documento "Garantía limitada estándar"
+     * ==========================
+     */
+
+    // ✅ CUBRE: defectos de ensamble/fabricación (mecánico/eléctrico) atribuibles a fábrica
     $razonesCubre = [
-        'defecto_fabricacion' => 'Defecto de fabricación (materiales / mano de obra)',
-        'defecto_ensamble'    => 'Defecto de ensamble',
-        'mecanico_cubierto'   => 'Falla mecánica cubierta (por defecto de fábrica)',
-        'electrico_cubierto'  => 'Falla eléctrica cubierta (por defecto de fábrica)',
+        'Defectos cubiertos (según garantía)' => [
+            'defecto_materiales_mano_obra' => 'Defecto de fabricación: materiales / mano de obra',
+            'defecto_ensamble'             => 'Defecto de ensamble',
+            'mecanico_defecto_fabrica'     => 'Falla mecánica atribuible a defecto de fábrica',
+            'electrico_defecto_fabrica'    => 'Falla eléctrica atribuible a defecto de fábrica',
+        ],
     ];
 
+    // ✅ NO CUBRE: exclusiones del documento
     $razonesNoCubre = [
-        'mal_uso'           => 'Uso indebido / maltrato / negligencia / manipulación inadecuada',
-        'mantenimiento'     => 'Mantenimiento indebido',
-        'transporte'        => 'Daños por accidentes en transporte',
-        'cosmetico'         => 'Piezas cosméticas (molduras, acabados, plásticos, cubiertas)',
-        'vidrios'           => 'Vidrios o espejos rotos después de entregado',
-        'desgaste_normal'   => 'Desgaste normal (raspaduras, decoloración, opacamiento)',
-        'causa_externa'     => 'Causas externas (incendios, hurto, fuerza mayor, etc.)',
-        'no_autorizado'     => 'Reparación / intervención por personal no autorizado',
-        'terceros'          => 'Productos incompatibles o terceros',
-        'electricidad'      => 'Fallas eléctricas externas / descargas / cortos / relámpagos',
-        'electronicos'      => 'Daños o fallas de componentes eléctricos/electrónicos (no cubre)',
-        'perecederos'       => 'Merma de productos perecederos por la falla',
-        'refrigerante'      => 'Gas refrigerante (fuga / recarga) no cubierto',
-        'impuestos_envio'   => 'Transportes / aranceles / impuestos / importación no cubiertos',
-        'mano_obra'         => 'Mano de obra para reemplazo no cubierta',
+        'Uso / cuidado del cliente' => [
+            'uso_indebido_maltrato' => 'Uso indebido, maltrato, negligencia o manipulación inadecuada',
+            'mantenimiento_indebido'=> 'Mantenimiento indebido',
+        ],
+
+        'Transporte / entrega' => [
+            'danos_transporte'      => 'Daños por accidentes en el transporte',
+            'vidrios_post_entrega'  => 'Vidrios / espejos rotos después de entregado',
+        ],
+
+        'Estético / desgaste' => [
+            'cosmetico'        => 'Cubiertas, plásticos o piezas cosméticas (molduras, acabados)',
+            'desgaste_normal'  => 'Desgaste normal (raspaduras, decoloración, opacamiento)',
+        ],
+
+        'Causas externas / energía' => [
+            'causas_externas'      => 'Causas externas (incendios, hurto, fuerza mayor, alteraciones)',
+            'software_hardware'    => 'Problemas derivados de software/hardware no suministrado por fabricante',
+            'electricidad_externa' => 'Fallas eléctricas externas: descargas, cortos, relámpagos, voltaje',
+        ],
+
+        'Intervención no autorizada / terceros' => [
+            'no_autorizado'         => 'Reparaciones realizadas por personal no autorizado',
+            'terceros_incompatibles'=> 'Uso de productos incompatibles de terceros / intervenciones de terceros',
+        ],
+
+        'Consecuencias y costos NO cubiertos' => [
+            'perecederos'     => 'Merma de productos perecederos por la falla del equipo',
+            'refrigerante'    => 'Reemplazo/recarga de gas refrigerante por fuga',
+            'impuestos_envio' => 'Transportes/aranceles/impuestos/importación de repuestos',
+            'mano_obra'       => 'Mano de obra para reemplazo de componentes',
+        ],
     ];
 
+    // ✅ Helper: devolver el label bonito para el historial
     $labelRazon = function($s) use ($razonesCubre, $razonesNoCubre) {
         $k = $s->razon_codigo;
         if (!$k) return null;
-        return $razonesCubre[$k] ?? $razonesNoCubre[$k] ?? $k;
+
+        foreach ($razonesCubre as $grupo => $items) {
+            if (isset($items[$k])) return $items[$k];
+        }
+        foreach ($razonesNoCubre as $grupo => $items) {
+            if (isset($items[$k])) return $items[$k];
+        }
+        return $k;
     };
 @endphp
 
@@ -156,7 +191,7 @@
             </div>
         @endif
 
-        {{-- ✅ Errores del form (para ver validaciones) --}}
+        {{-- Errores del form --}}
         @if ($errors->any())
             <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800">
                 <div class="font-semibold">Revisa el formulario</div>
@@ -240,7 +275,6 @@
                     <p class="text-xs text-gray-500 mt-1">Agrega eventos al historial</p>
                 </div>
 
-                {{-- ✅ Si es final: NO mostrar form --}}
                 @if($esFinal)
                     <div class="p-6">
                         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
@@ -262,9 +296,7 @@
                           }"
                           x-effect="
                             if(estado === 'rechazada') decision = 'nocubre';
-                            if(!(estado === 'cerrada' || estado === 'rechazada')) {
-                                decision = '';
-                            }
+                            if(!(estado === 'cerrada' || estado === 'rechazada')) { decision = ''; }
                           ">
                         @csrf
 
@@ -280,7 +312,7 @@
                             @error('estado') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
                         </div>
 
-                        {{-- ✅ Decisión de cobertura (solo finales) --}}
+                        {{-- Decisión de cobertura (solo finales) --}}
                         <div x-show="estado === 'cerrada' || estado === 'rechazada'" x-cloak>
                             <label class="text-sm font-medium text-gray-700">Decisión de cobertura *</label>
 
@@ -312,41 +344,68 @@
                             @error('decision_cobertura') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
                         </div>
 
-                        {{-- ✅ Motivo (FIX: required/disabled dinámico) --}}
-                        <div x-show="estado === 'cerrada' || estado === 'rechazada'" x-cloak>
+                        {{-- ✅ Motivo PRO (organizado + guía clara) --}}
+                        <div x-show="estado === 'cerrada' || estado === 'rechazada'" x-cloak class="space-y-3">
                             <label class="text-sm font-medium text-gray-700">Motivo (según garantía) *</label>
+
+                            {{-- Guía rápida --}}
+                            <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm">
+                                <div class="font-semibold text-gray-900 flex items-center gap-2">
+                                    <span class="inline-flex h-2 w-2 rounded-full"
+                                          :class="(estado==='rechazada' || decision==='nocubre') ? 'bg-red-600' : 'bg-emerald-600'"></span>
+                                    <span x-text="(estado==='rechazada' || decision==='nocubre')
+                                        ? 'NO cubre: elige una exclusión del documento'
+                                        : 'SÍ cubre: debe ser defecto de fábrica/ensamble (mecánico/eléctrico)'">
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    Tip: si la causa es voltaje, corto, instalación, relámpago o terceros → normalmente va en “Causas externas / energía”.
+                                </div>
+                            </div>
 
                             <select name="razon_codigo"
                                     x-bind:disabled="!(estado === 'cerrada' || estado === 'rechazada')"
                                     x-bind:required="(estado === 'cerrada' || estado === 'rechazada')"
-                                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">— Selecciona —</option>
+                                    class="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">— Selecciona un motivo —</option>
 
+                                {{-- NO CUBRE --}}
                                 <template x-if="estado === 'rechazada' || decision === 'nocubre'">
-                                    <optgroup label="NO cubre garantía">
-                                        @foreach($razonesNoCubre as $k => $v)
-                                            <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>{{ $v }}</option>
+                                    <optgroup label="NO CUBRE GARANTÍA (exclusiones)">
+                                        @foreach($razonesNoCubre as $grupo => $items)
+                                            <option value="" disabled>──────── {{ $grupo }} ────────</option>
+                                            @foreach($items as $k => $v)
+                                                <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>
+                                                    {{ $v }}
+                                                </option>
+                                            @endforeach
                                         @endforeach
                                     </optgroup>
                                 </template>
 
+                                {{-- SÍ CUBRE --}}
                                 <template x-if="estado === 'cerrada' && decision === 'cubre'">
-                                    <optgroup label="SÍ cubre garantía">
-                                        @foreach($razonesCubre as $k => $v)
-                                            <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>{{ $v }}</option>
+                                    <optgroup label="SÍ CUBRE GARANTÍA">
+                                        @foreach($razonesCubre as $grupo => $items)
+                                            <option value="" disabled>──────── {{ $grupo }} ────────</option>
+                                            @foreach($items as $k => $v)
+                                                <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>
+                                                    {{ $v }}
+                                                </option>
+                                            @endforeach
                                         @endforeach
                                     </optgroup>
                                 </template>
                             </select>
 
-                            @error('razon_codigo') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                            @error('razon_codigo') <div class="text-xs text-red-600">{{ $message }}</div> @enderror
 
-                            <div class="mt-3">
+                            <div>
                                 <label class="text-sm font-medium text-gray-700">Detalle adicional (opcional)</label>
                                 <textarea name="razon_detalle" rows="3"
                                           x-bind:disabled="!(estado === 'cerrada' || estado === 'rechazada')"
                                           class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                                          placeholder="Ej: evidencia, serial, fotos, diagnóstico, etc.">{{ old('razon_detalle') }}</textarea>
+                                          placeholder="Ej: diagnóstico, evidencia, serial, fotos, medición de voltaje, reporte técnico, etc.">{{ old('razon_detalle') }}</textarea>
                                 @error('razon_detalle') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
                             </div>
                         </div>
@@ -417,7 +476,7 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- ✅ Decision + Motivo --}}
+                                                {{-- Decision + Motivo --}}
                                                 @if($decisionTxt && $motivoTxt)
                                                     <div class="mt-2 text-sm">
                                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border
