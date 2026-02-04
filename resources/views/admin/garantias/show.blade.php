@@ -1,13 +1,9 @@
+{{-- resources/views/admin/garantias/show.blade.php --}}
 <x-app-layout>
 @php
-    /**
-     * ==========================
-     * Datos base
-     * ==========================
-     */
     $c = $garantia->cliente;
-
     $estado = $garantia->estado ?? 'activa';
+    $esFinal = in_array($estado, ['cerrada','rechazada'], true);
 
     $estadoLabels = [
         'activa' => 'Activa',
@@ -25,7 +21,6 @@
         'rechazada' => 'bg-red-50 text-red-700 border-red-100',
     ][$estado] ?? 'bg-gray-100 text-gray-700 border-gray-200';
 
-    // ✅ Labels PRO para seguimientos (para que NO se vea "Enrevision")
     $seguimientoLabels = [
         'recibida' => 'Recibida',
         'enrevision' => 'En revisión',
@@ -46,7 +41,6 @@
         $textoDias = null;
     }
 
-    // Badge pro para estados de seguimiento
     $seguimientoBadge = [
         'recibida' => 'bg-blue-50 text-blue-700 border-blue-100',
         'enrevision' => 'bg-amber-50 text-amber-800 border-amber-100',
@@ -55,6 +49,38 @@
         'cerrada' => 'bg-gray-100 text-gray-700 border-gray-200',
         'rechazada' => 'bg-red-50 text-red-700 border-red-100',
     ];
+
+    // ✅ Catálogo PRO (SÍ cubre / NO cubre)
+    $razonesCubre = [
+        'defecto_fabricacion' => 'Defecto de fabricación (materiales / mano de obra)',
+        'defecto_ensamble'    => 'Defecto de ensamble',
+        'mecanico_cubierto'   => 'Falla mecánica cubierta (por defecto de fábrica)',
+        'electrico_cubierto'  => 'Falla eléctrica cubierta (por defecto de fábrica)',
+    ];
+
+    $razonesNoCubre = [
+        'mal_uso'           => 'Uso indebido / maltrato / negligencia / manipulación inadecuada',
+        'mantenimiento'     => 'Mantenimiento indebido',
+        'transporte'        => 'Daños por accidentes en transporte',
+        'cosmetico'         => 'Piezas cosméticas (molduras, acabados, plásticos, cubiertas)',
+        'vidrios'           => 'Vidrios o espejos rotos después de entregado',
+        'desgaste_normal'   => 'Desgaste normal (raspaduras, decoloración, opacamiento)',
+        'causa_externa'     => 'Causas externas (incendios, hurto, fuerza mayor, etc.)',
+        'no_autorizado'     => 'Reparación / intervención por personal no autorizado',
+        'terceros'          => 'Productos incompatibles o terceros',
+        'electricidad'      => 'Fallas eléctricas externas / descargas / cortos / relámpagos',
+        'electronicos'      => 'Daños o fallas de componentes eléctricos/electrónicos (no cubre)',
+        'perecederos'       => 'Merma de productos perecederos por la falla',
+        'refrigerante'      => 'Gas refrigerante (fuga / recarga) no cubierto',
+        'impuestos_envio'   => 'Transportes / aranceles / impuestos / importación no cubiertos',
+        'mano_obra'         => 'Mano de obra para reemplazo no cubierta',
+    ];
+
+    $labelRazon = function($s) use ($razonesCubre, $razonesNoCubre) {
+        $k = $s->razon_codigo;
+        if (!$k) return null;
+        return $razonesCubre[$k] ?? $razonesNoCubre[$k] ?? $k;
+    };
 @endphp
 
 {{-- ================= HEADER ================= --}}
@@ -63,9 +89,7 @@
         <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div class="min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h2 class="text-2xl font-semibold text-gray-900">
-                        Caso de garantía
-                    </h2>
+                    <h2 class="text-2xl font-semibold text-gray-900">Caso de garantía</h2>
 
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border {{ $estadoBadge }}">
                         {{ $estadoLabels[$estado] ?? strtoupper($estado) }}
@@ -79,15 +103,12 @@
                 </div>
 
                 <p class="text-sm text-gray-600 mt-1 truncate">
-                    Serie:
-                    <span class="font-semibold text-gray-900">{{ $garantia->numero_serie }}</span>
+                    Serie: <span class="font-semibold text-gray-900">{{ $garantia->numero_serie }}</span>
                     <span class="text-gray-400">·</span>
-                    ID:
-                    <span class="font-semibold text-gray-900">{{ $garantia->id }}</span>
+                    ID: <span class="font-semibold text-gray-900">{{ $garantia->id }}</span>
                 </p>
             </div>
 
-            {{-- ✅ Acciones visibles (sin eliminar caso) --}}
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.garantias.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">
@@ -135,26 +156,29 @@
             </div>
         @endif
 
+        {{-- ✅ Errores del form (para ver validaciones) --}}
+        @if ($errors->any())
+            <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800">
+                <div class="font-semibold">Revisa el formulario</div>
+                <ul class="text-sm list-disc pl-5 mt-2">
+                    @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- ================= CLIENTE + DATOS ================= --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- Cliente --}}
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Cliente</h3>
-                        <p class="text-xs text-gray-500 mt-1">Titular de la garantía</p>
-                    </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Cliente</h3>
+                    <p class="text-xs text-gray-500 mt-1">Titular de la garantía</p>
                 </div>
 
                 <div class="mt-4 space-y-2">
-                    <div class="font-semibold text-gray-900">
-                        {{ $c?->nombre_contacto ?? '—' }}
-                    </div>
-
-                    <div class="text-sm text-gray-600">
-                        {{ $c?->empresa ?: 'Persona natural' }}
-                    </div>
+                    <div class="font-semibold text-gray-900">{{ $c?->nombre_contacto ?? '—' }}</div>
+                    <div class="text-sm text-gray-600">{{ $c?->empresa ?: 'Persona natural' }}</div>
 
                     <div class="text-sm text-gray-700 pt-2 border-t border-gray-100 space-y-1">
                         <div><span class="text-gray-500">Documento:</span> {{ $c?->documento ?? '—' }}</div>
@@ -179,9 +203,7 @@
 
                     <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
                         <div class="text-xs text-gray-500">Meses garantía</div>
-                        <div class="font-semibold text-gray-900">
-                            {{ $garantia->meses_garantia }}
-                        </div>
+                        <div class="font-semibold text-gray-900">{{ $garantia->meses_garantia }}</div>
                     </div>
 
                     <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
@@ -218,49 +240,138 @@
                     <p class="text-xs text-gray-500 mt-1">Agrega eventos al historial</p>
                 </div>
 
-                <form method="POST"
-                      action="{{ route('admin.garantias.seguimientos.store', $garantia) }}"
-                      enctype="multipart/form-data"
-                      class="p-6 space-y-4">
-                    @csrf
-
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Estado *</label>
-                        <select name="estado" required
-                                class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
-                            @foreach(['recibida','enrevision','enreparacion','listaparaentregar','cerrada','rechazada'] as $e)
-                                <option value="{{ $e }}">{{ $seguimientoLabels[$e] ?? $e }}</option>
-                            @endforeach
-                        </select>
-                        @error('estado')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
+                {{-- ✅ Si es final: NO mostrar form --}}
+                @if($esFinal)
+                    <div class="p-6">
+                        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                            <div class="font-semibold">Caso finalizado</div>
+                            <div class="text-sm mt-1">
+                                Esta garantía está <span class="font-semibold">{{ $estadoLabels[$estado] ?? $estado }}</span>,
+                                por lo tanto no se pueden agregar más seguimientos.
+                            </div>
+                        </div>
                     </div>
+                @else
+                    <form method="POST"
+                          action="{{ route('admin.garantias.seguimientos.store', $garantia) }}"
+                          enctype="multipart/form-data"
+                          class="p-6 space-y-4"
+                          x-data="{
+                            estado: '{{ old('estado','recibida') }}',
+                            decision: '{{ old('decision_cobertura','') }}'
+                          }"
+                          x-effect="
+                            if(estado === 'rechazada') decision = 'nocubre';
+                            if(!(estado === 'cerrada' || estado === 'rechazada')) {
+                                decision = '';
+                            }
+                          ">
+                        @csrf
 
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Nota</label>
-                        <textarea name="nota" rows="4"
-                                  class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                                  placeholder="Detalle del evento...">{{ old('nota') }}</textarea>
-                        @error('nota')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Estado *</label>
+                            <select name="estado" required
+                                    x-model="estado"
+                                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                                @foreach(['recibida','enrevision','enreparacion','listaparaentregar','cerrada','rechazada'] as $e)
+                                    <option value="{{ $e }}">{{ $seguimientoLabels[$e] ?? $e }}</option>
+                                @endforeach
+                            </select>
+                            @error('estado') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                        </div>
 
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Archivo</label>
-                        <input type="file" name="archivo"
-                               class="mt-1 w-full rounded-xl border-gray-200 bg-white">
-                        <p class="text-xs text-gray-500 mt-1">PDF/imagen o evidencia (máx 5MB).</p>
-                        @error('archivo')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                        {{-- ✅ Decisión de cobertura (solo finales) --}}
+                        <div x-show="estado === 'cerrada' || estado === 'rechazada'" x-cloak>
+                            <label class="text-sm font-medium text-gray-700">Decisión de cobertura *</label>
 
-                    <button class="w-full px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
-                        Agregar seguimiento
-                    </button>
-                </form>
+                            <div class="mt-2 grid grid-cols-2 gap-2">
+                                <button type="button"
+                                        @click="decision='cubre'"
+                                        :disabled="estado==='rechazada'"
+                                        :class="(estado==='rechazada')
+                                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                            : (decision==='cubre' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-900')"
+                                        class="px-4 py-2 rounded-xl font-semibold">
+                                    Cubre garantía
+                                </button>
+
+                                <button type="button"
+                                        @click="decision='nocubre'"
+                                        :class="decision==='nocubre' || estado==='rechazada' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-900'"
+                                        class="px-4 py-2 rounded-xl font-semibold">
+                                    No cubre
+                                </button>
+                            </div>
+
+                            <input type="hidden" name="decision_cobertura" :value="estado==='rechazada' ? 'nocubre' : decision">
+
+                            <p class="text-xs text-gray-500 mt-2">
+                                Si el estado es <span class="font-semibold">Rechazada</span>, el sistema fuerza “No cubre”.
+                            </p>
+
+                            @error('decision_cobertura') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- ✅ Motivo (FIX: required/disabled dinámico) --}}
+                        <div x-show="estado === 'cerrada' || estado === 'rechazada'" x-cloak>
+                            <label class="text-sm font-medium text-gray-700">Motivo (según garantía) *</label>
+
+                            <select name="razon_codigo"
+                                    x-bind:disabled="!(estado === 'cerrada' || estado === 'rechazada')"
+                                    x-bind:required="(estado === 'cerrada' || estado === 'rechazada')"
+                                    class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">— Selecciona —</option>
+
+                                <template x-if="estado === 'rechazada' || decision === 'nocubre'">
+                                    <optgroup label="NO cubre garantía">
+                                        @foreach($razonesNoCubre as $k => $v)
+                                            <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>{{ $v }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                </template>
+
+                                <template x-if="estado === 'cerrada' && decision === 'cubre'">
+                                    <optgroup label="SÍ cubre garantía">
+                                        @foreach($razonesCubre as $k => $v)
+                                            <option value="{{ $k }}" @selected(old('razon_codigo')===$k)>{{ $v }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                </template>
+                            </select>
+
+                            @error('razon_codigo') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+
+                            <div class="mt-3">
+                                <label class="text-sm font-medium text-gray-700">Detalle adicional (opcional)</label>
+                                <textarea name="razon_detalle" rows="3"
+                                          x-bind:disabled="!(estado === 'cerrada' || estado === 'rechazada')"
+                                          class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                          placeholder="Ej: evidencia, serial, fotos, diagnóstico, etc.">{{ old('razon_detalle') }}</textarea>
+                                @error('razon_detalle') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Nota</label>
+                            <textarea name="nota" rows="4"
+                                      class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                      placeholder="Detalle del evento...">{{ old('nota') }}</textarea>
+                            @error('nota') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Archivo</label>
+                            <input type="file" name="archivo"
+                                   class="mt-1 w-full rounded-xl border-gray-200 bg-white">
+                            <p class="text-xs text-gray-500 mt-1">PDF/imagen o evidencia (máx 5MB).</p>
+                            @error('archivo') <div class="text-xs text-red-600 mt-1">{{ $message }}</div> @enderror
+                        </div>
+
+                        <button class="w-full px-4 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700">
+                            Agregar seguimiento
+                        </button>
+                    </form>
+                @endif
             </div>
 
             {{-- HISTORIAL --}}
@@ -281,6 +392,12 @@
                                 @php
                                     $label = $seguimientoLabels[$s->estado] ?? $s->estado;
                                     $b = $seguimientoBadge[$s->estado] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+
+                                    $decisionTxt = $s->decision_cobertura === 'cubre'
+                                        ? 'Cubre garantía'
+                                        : ($s->decision_cobertura === 'nocubre' ? 'No cubre garantía' : null);
+
+                                    $motivoTxt = $labelRazon($s);
                                 @endphp
 
                                 <li class="mb-8 ms-6">
@@ -299,9 +416,29 @@
                                                         · {{ $s->created_at->diffForHumans() }}
                                                     </div>
                                                 </div>
+
+                                                {{-- ✅ Decision + Motivo --}}
+                                                @if($decisionTxt && $motivoTxt)
+                                                    <div class="mt-2 text-sm">
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border
+                                                            {{ $s->decision_cobertura==='cubre' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100' }}">
+                                                            {{ $decisionTxt }}
+                                                        </span>
+
+                                                        <div class="mt-2 text-xs text-gray-600">
+                                                            <span class="font-semibold text-gray-900">Motivo:</span>
+                                                            <span class="text-gray-800">{{ $motivoTxt }}</span>
+                                                        </div>
+
+                                                        @if($s->razon_detalle)
+                                                            <div class="mt-2 text-xs text-gray-600 whitespace-pre-line">
+                                                                {{ $s->razon_detalle }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </div>
 
-                                            {{-- ⚠️ Ajusta la ruta si tu nombre real es diferente --}}
                                             <div class="shrink-0" x-data="{ open:false }">
                                                 <button type="button" @click="open = !open"
                                                         class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold text-sm">

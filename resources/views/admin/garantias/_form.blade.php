@@ -90,7 +90,6 @@
             <div>
                 <label class="text-sm font-medium text-gray-700">Estado (auto)</label>
 
-                {{-- Badge solo lectura --}}
                 <div class="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {{ $estadoBadge }}">
                         {{ $estadoLabels[$estadoActual] ?? strtoupper($estadoActual) }}
@@ -100,14 +99,13 @@
                     </p>
                 </div>
 
-                {{-- Mantener valor para compatibilidad (si tu controlador aún lo valida en update) --}}
                 <input type="hidden" name="estado" value="{{ $estadoActual }}">
                 @error('estado') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
     </div>
 
-    {{-- Fecha entrega fábrica (NORMA) + vencimiento calculado --}}
+    {{-- Fecha entrega fábrica + vencimiento calculado --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4"
          x-data="garantiaNormaFechas()"
          x-init="init()">
@@ -178,13 +176,12 @@
 
             init() { this.recalcular(); },
 
-            // ✅ Suma meses sin overflow (más estable que setMonth directo)
             addMonthsNoOverflow(dateStr, months) {
                 const [y, m, d] = dateStr.split('-').map(Number);
                 const targetMonth = (m - 1) + months;
 
                 const ny = y + Math.floor(targetMonth / 12);
-                const nm = (targetMonth % 12 + 12) % 12; // 0-11
+                const nm = (targetMonth % 12 + 12) % 12;
 
                 const lastDay = new Date(ny, nm + 1, 0).getDate();
                 const nd = Math.min(d, lastDay);

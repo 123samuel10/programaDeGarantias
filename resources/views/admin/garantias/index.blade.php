@@ -126,95 +126,74 @@
                                         </span>
                                     </td>
 
-                              <td class="px-5 py-4 text-right">
-    <div class="inline-flex gap-2" x-data="{ openDelete:false }">
-        {{-- Ver --}}
-        <a href="{{ route('admin.garantias.show', $g) }}"
-           class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">
-            Ver caso
-        </a>
+                                    <td class="px-5 py-4 text-right">
+                                        <div class="inline-flex gap-2" x-data="{ openDelete:false }">
+                                            <a href="{{ route('admin.garantias.show', $g) }}"
+                                               class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 font-semibold">
+                                                Ver caso
+                                            </a>
 
-        {{-- Editar --}}
-        <a href="{{ route('admin.garantias.edit', $g) }}"
-           class="px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-100 font-semibold">
-            Editar
-        </a>
+                                            <a href="{{ route('admin.garantias.edit', $g) }}"
+                                               class="px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-100 font-semibold">
+                                                Editar
+                                            </a>
 
-        {{-- Eliminar --}}
-        <button type="button"
-                @click="openDelete=true"
-                class="px-3 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-sm">
-            Eliminar
-        </button>
+                                            <button type="button"
+                                                    @click="openDelete=true"
+                                                    class="px-3 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-sm">
+                                                Eliminar
+                                            </button>
 
-        {{-- ================= MODAL ELIMINAR ================= --}}
-        <div x-show="openDelete" x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                            <div x-show="openDelete" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                                <div class="absolute inset-0 bg-gray-900/50" @click="openDelete=false"></div>
 
-            {{-- Overlay --}}
-            <div class="absolute inset-0 bg-gray-900/50"
-                 @click="openDelete=false"></div>
+                                                <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                                                    <div class="p-6">
+                                                        <div class="flex items-start gap-4">
+                                                            <div class="w-11 h-11 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                                                                <svg class="w-6 h-6 text-red-700" viewBox="0 0 24 24" fill="none">
+                                                                    <path d="M12 9v4m0 4h.01M10.3 4.3h3.4L21 19H3l7.3-14.7Z"
+                                                                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                </svg>
+                                                            </div>
 
-            {{-- Modal --}}
-            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                                                            <div class="min-w-0">
+                                                                <h4 class="text-lg font-semibold text-gray-900">Eliminar caso de garantía</h4>
 
-                <div class="p-6">
-                    <div class="flex items-start gap-4">
-                        <div class="w-11 h-11 rounded-2xl bg-red-50 border border-red-100
-                                    flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-red-700" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 9v4m0 4h.01M10.3 4.3h3.4L21 19H3l7.3-14.7Z"
-                                      stroke="currentColor" stroke-width="2"
-                                      stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
+                                                                <p class="text-sm text-gray-600 mt-1">
+                                                                    Vas a eliminar el caso con serie:
+                                                                    <span class="font-semibold text-gray-900">{{ $g->numero_serie }}</span>
+                                                                </p>
 
-                        <div class="min-w-0">
-                            <h4 class="text-lg font-semibold text-gray-900">
-                                Eliminar caso de garantía
-                            </h4>
+                                                                <div class="mt-4 rounded-xl bg-red-50 border border-red-100 p-3">
+                                                                    <p class="text-sm text-red-800">
+                                                                        Esta acción <span class="font-semibold">no se puede deshacer</span>.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                            <p class="text-sm text-gray-600 mt-1">
-                                Vas a eliminar el caso con serie:
-                                <span class="font-semibold text-gray-900">
-                                    {{ $g->numero_serie }}
-                                </span>
-                            </p>
+                                                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                                                        <button type="button"
+                                                                @click="openDelete=false"
+                                                                class="px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-100 font-semibold">
+                                                            Cancelar
+                                                        </button>
 
-                            <div class="mt-4 rounded-xl bg-red-50 border border-red-100 p-3">
-                                <p class="text-sm text-red-800">
-                                    Esta acción <span class="font-semibold">no se puede deshacer</span>.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                                        <form method="POST" action="{{ route('admin.garantias.destroy', $g) }}">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-sm">
+                                                                Sí, eliminar
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                {{-- Footer --}}
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100
-                            flex items-center justify-end gap-2">
-                    <button type="button"
-                            @click="openDelete=false"
-                            class="px-4 py-2 rounded-xl bg-white border border-gray-200
-                                   hover:bg-gray-100 font-semibold">
-                        Cancelar
-                    </button>
-
-                    <form method="POST" action="{{ route('admin.garantias.destroy', $g) }}">
-                        @csrf
-                        @method('DELETE')
-                        <button
-                            class="px-4 py-2 rounded-xl bg-red-600 text-white
-                                   font-semibold hover:bg-red-700 shadow-sm">
-                            Sí, eliminar
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {{-- =============== /MODAL =============== --}}
-    </div>
-</td>
+                                        </div>
+                                    </td>
 
                                 </tr>
                             @empty

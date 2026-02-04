@@ -11,18 +11,19 @@ class SeguimientoGarantia extends Model
 
     protected $table = 'seguimiento_garantias';
 
-    protected $fillable = [
-        'garantia_id',
-        'estado',
-        'nota',
+  protected $fillable = [
+    'garantia_id',
+    'estado',
+    'nota',
+    'informe_tecnico',
+    'fotos',
+    'archivo',
 
-        // NUEVO
-        'informe_tecnico',
-        'fotos',
-
-        // legado
-        'archivo',
-    ];
+    // ✅ NUEVO (decisión pro)
+    'decision_cobertura',
+    'razon_codigo',
+    'razon_detalle',
+];
 
     protected $casts = [
         'fotos' => 'array',

@@ -20,40 +20,67 @@ class SeguimientoGarantiaController extends Controller
     }
 
     public function store(Request $request, Garantia $garantia)
-    {
-        $this->validarAdmin();
+{
+    $this->validarAdmin();
 
-        // ✅ No permitir si está FINAL
-        if ($garantia->esFinal()) {
-            return back()->with('error', 'No puedes agregar seguimientos a una garantía cerrada o rechazada.');
+    if ($garantia->esFinal()) {
+        return back()->with('error', 'No puedes agregar seguimientos a una garantía cerrada o rechazada.');
+    }
+
+    $data = $request->validate([
+        'estado'  => ['required', Rule::in(['recibida','enrevision','enreparacion','listaparaentregar','cerrada','rechazada'])],
+        'nota'    => ['nullable', 'string'],
+        'archivo' => ['nullable', 'file', 'max:5120'],
+
+        // ✅ NUEVO
+        'decision_cobertura' => ['nullable', Rule::in(['cubre','nocubre'])],
+        'razon_codigo'       => ['nullable', 'string', 'max:80'],
+        'razon_detalle'      => ['nullable', 'string', 'max:2000'],
+    ]);
+
+    // ✅ Reglas PRO:
+    // - Si es "rechazada": decisión obligatoria = nocubre + razón obligatoria
+    // - Si es "cerrada": decisión obligatoria + razón obligatoria (de cubre o nocubre)
+    if (in_array($data['estado'], ['rechazada','cerrada'], true)) {
+
+        if ($data['estado'] === 'rechazada') {
+            $data['decision_cobertura'] = 'nocubre';
         }
 
-        $data = $request->validate([
-            'estado'  => ['required', Rule::in(['recibida','enrevision','enreparacion','listaparaentregar','cerrada','rechazada'])],
-            'nota'    => ['nullable', 'string'],
-            'archivo' => ['nullable', 'file', 'max:5120'],
-        ]);
-
-        if ($request->hasFile('archivo')) {
-            $data['archivo'] = $request->file('archivo')->store('garantias/archivos', 'public');
+        if (empty($data['decision_cobertura'])) {
+            return back()->withErrors(['decision_cobertura' => 'Debes indicar si el caso cubre o no cubre garantía.'])->withInput();
         }
 
-        $data['garantia_id'] = $garantia->id;
-
-        SeguimientoGarantia::create($data);
-
-        // ✅ Si el seguimiento cierra/rechaza -> queda final
-        if (in_array($data['estado'], ['cerrada','rechazada'], true)) {
-            $garantia->update(['estado' => $data['estado']]);
-            return back()->with('success', 'Seguimiento agregado.');
+        if (empty($data['razon_codigo'])) {
+            return back()->withErrors(['razon_codigo' => 'Selecciona un motivo (según política de garantía).'])->withInput();
         }
+    } else {
+        // Para estados de proceso, limpia para que no ensucie el historial
+        $data['decision_cobertura'] = null;
+        $data['razon_codigo'] = null;
+        $data['razon_detalle'] = null;
+    }
 
-        // ✅ NO forzar enproceso: recalcula (activa/enproceso/vencida) según fecha + seguimientos
-        $garantia->load('seguimientos');
-        $garantia->sincronizarEstadoMacro();
+    if ($request->hasFile('archivo')) {
+        $data['archivo'] = $request->file('archivo')->store('garantias/archivos', 'public');
+    }
 
+    $data['garantia_id'] = $garantia->id;
+
+    SeguimientoGarantia::create($data);
+
+    // ✅ Finales
+    if (in_array($data['estado'], ['cerrada','rechazada'], true)) {
+        $garantia->update(['estado' => $data['estado']]);
         return back()->with('success', 'Seguimiento agregado.');
     }
+
+    $garantia->load('seguimientos');
+    $garantia->sincronizarEstadoMacro();
+
+    return back()->with('success', 'Seguimiento agregado.');
+}
+
 
     public function destroy(SeguimientoGarantia $seguimientoGarantia)
     {
