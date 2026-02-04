@@ -32,13 +32,13 @@ class SeguimientoGarantiaController extends Controller
         'nota'    => ['nullable', 'string'],
         'archivo' => ['nullable', 'file', 'max:5120'],
 
-        // ✅ NUEVO
+        // NUEVO
         'decision_cobertura' => ['nullable', Rule::in(['cubre','nocubre'])],
         'razon_codigo'       => ['nullable', 'string', 'max:80'],
         'razon_detalle'      => ['nullable', 'string', 'max:2000'],
     ]);
 
-    // ✅ Reglas PRO:
+    // Reglas PRO:
     // - Si es "rechazada": decisión obligatoria = nocubre + razón obligatoria
     // - Si es "cerrada": decisión obligatoria + razón obligatoria (de cubre o nocubre)
     if (in_array($data['estado'], ['rechazada','cerrada'], true)) {
@@ -69,7 +69,7 @@ class SeguimientoGarantiaController extends Controller
 
     SeguimientoGarantia::create($data);
 
-    // ✅ Finales
+    //  Finales
     if (in_array($data['estado'], ['cerrada','rechazada'], true)) {
         $garantia->update(['estado' => $data['estado']]);
         return back()->with('success', 'Seguimiento agregado.');
@@ -94,7 +94,7 @@ class SeguimientoGarantiaController extends Controller
 
         $seguimientoGarantia->delete();
 
-        // ✅ Recalcular macro del caso padre
+        //  Recalcular macro del caso padre
         $garantia = Garantia::with('seguimientos')->find($garantiaId);
         if ($garantia && !$garantia->esFinal()) {
             $garantia->sincronizarEstadoMacro();

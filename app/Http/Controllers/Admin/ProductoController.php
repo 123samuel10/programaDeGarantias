@@ -56,7 +56,7 @@ class ProductoController extends Controller
             'tipo_equipo' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
 
-            // ✅ FOTO COMO ARCHIVO
+            //  FOTO COMO ARCHIVO
             'foto' => 'nullable|image|max:4096',
 
             'repisas_iluminadas' => 'nullable|integer|min:0',
@@ -97,7 +97,7 @@ class ProductoController extends Controller
             'tipo_equipo' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string',
 
-            // ✅ FOTO COMO ARCHIVO
+            //  FOTO COMO ARCHIVO
             'foto' => 'nullable|image|max:4096',
 
             'repisas_iluminadas' => 'nullable|integer|min:0',

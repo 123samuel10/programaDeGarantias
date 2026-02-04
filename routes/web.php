@@ -23,16 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Route::middleware('auth')->prefix('admin')->group(function () {
-//     Route::resource('clientes', ClienteController::class)->names('admin.clientes');
-//     Route::resource('garantias', GarantiaController::class)->names('admin.garantias');
 
-//     Route::post('garantias/{garantia}/seguimientos', [SeguimientoGarantiaController::class, 'store'])
-//         ->name('admin.garantias.seguimientos.store');
-
-//     Route::delete('seguimientos/{seguimientoGarantia}', [SeguimientoGarantiaController::class, 'destroy'])
-//         ->name('admin.seguimientos.destroy');
-// });
 
 Route::middleware('auth')->prefix('admin')->group(function () {
     Route::resource('clientes', ClienteController::class)->names('admin.clientes');

@@ -91,7 +91,7 @@
                             'rechazada' => 'bg-red-50 text-red-700 border-red-100',
                         ][$g->estado] ?? 'bg-gray-100 text-gray-700 border-gray-200';
 
-                        // ✅ Resolver foto (URL o storage)
+                        // Resolver foto (URL o storage)
                         $fotoUrl = null;
                         if ($p && !empty($p->foto)) {
                             if (str_starts_with($p->foto, 'http://') || str_starts_with($p->foto, 'https://')) {

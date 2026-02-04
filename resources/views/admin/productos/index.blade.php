@@ -69,7 +69,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 @forelse($productos as $p)
                     @php
-                        // ✅ URL REAL para la foto (soporta ruta storage o URL http)
+                        //  URL REAL para la foto (soporta ruta storage o URL http)
                         $fotoUrl = null;
                         if (!empty($p->foto)) {
                             if (str_starts_with($p->foto, 'http://') || str_starts_with($p->foto, 'https://')) {

@@ -15,14 +15,14 @@ class GarantiaController extends Controller
 {
     private function validarAdmin(): void
     {
-        // ✅ Mantengo tu forma actual
+        //  Mantengo tu forma actual
         if (!Auth::check() || Auth::user()->email !== 'admin@gmail.com') {
             abort(403, 'Acceso solo para administradores.');
         }
     }
 
     /**
-     * ✅ Auto-vencer en cada entrada al módulo (sin cron).
+     *  Auto-vencer en cada entrada al módulo (sin cron).
      */
     private function autoVencerGarantias(): void
     {
@@ -33,7 +33,7 @@ class GarantiaController extends Controller
     }
 
     /**
-     * ✅ Norma: vencimiento = entrega_fabrica + 18 meses
+     *  Norma: vencimiento = entrega_fabrica + 18 meses
      */
     private function calcularNorma18m(string $fechaEntregaFabrica): array
     {
@@ -70,7 +70,7 @@ class GarantiaController extends Controller
                 ->orWhere('documento', 'like', "%{$buscar}%");
           })
 
-          // ✅ NUEVO: buscar por producto
+          //  NUEVO: buscar por producto
           ->orWhereHas('producto', function ($p) use ($buscar) {
               $p->where('nombre_producto', 'like', "%{$buscar}%")
                 ->orWhere('marca', 'like', "%{$buscar}%")
@@ -118,19 +118,19 @@ class GarantiaController extends Controller
             'producto_id' => ['nullable', 'exists:productos,id'],
             'numero_serie' => ['required', 'string', 'max:255', 'unique:garantias,numero_serie'],
 
-            // ✅ Norma
+            //  Norma
             'fecha_entrega_fabrica' => ['required', 'date'],
 
             'motivo' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string'],
         ]);
 
-        // ✅ aplica norma 18 meses
+        // aplica norma 18 meses
         $norma = $this->calcularNorma18m($data['fecha_entrega_fabrica']);
         $data['meses_garantia'] = $norma['meses_garantia'];
         $data['fecha_vencimiento'] = $norma['fecha_vencimiento'];
 
-        // ✅ estado inicial: activa o vencida (si entregaron hace más de 18m)
+        // estado inicial: activa o vencida (si entregaron hace más de 18m)
         $vence = Carbon::parse($data['fecha_vencimiento'])->startOfDay();
         $data['estado'] = now()->startOfDay()->gt($vence) ? 'vencida' : 'activa';
 
@@ -191,24 +191,24 @@ class GarantiaController extends Controller
                 Rule::unique('garantias', 'numero_serie')->ignore($garantia->id),
             ],
 
-            // ✅ Norma
+            //  Norma
             'fecha_entrega_fabrica' => ['required', 'date'],
 
             'motivo' => ['nullable', 'string', 'max:255'],
             'notas' => ['nullable', 'string'],
         ]);
 
-        // ✅ recalcula norma 18 meses SIEMPRE que cambie la entrega
+        //  recalcula norma 18 meses SIEMPRE que cambie la entrega
         $norma = $this->calcularNorma18m($data['fecha_entrega_fabrica']);
         $data['meses_garantia'] = $norma['meses_garantia'];
         $data['fecha_vencimiento'] = $norma['fecha_vencimiento'];
 
         $garantia->update($data);
 
-        // ✅ auto-vencer global
+        //  auto-vencer global
         $this->autoVencerGarantias();
 
-        // ✅ recalcula estado macro si no es final
+        // recalcula estado macro si no es final
         if (method_exists($garantia, 'esFinal') && method_exists($garantia, 'sincronizarEstadoMacro')) {
             $garantia->load('seguimientos');
             if (!$garantia->esFinal()) {

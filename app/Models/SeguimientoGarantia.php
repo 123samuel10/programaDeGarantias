@@ -19,7 +19,7 @@ class SeguimientoGarantia extends Model
     'fotos',
     'archivo',
 
-    // ✅ NUEVO (decisión pro)
+    //  NUEVO (decisión pro)
     'decision_cobertura',
     'razon_codigo',
     'razon_detalle',

@@ -71,7 +71,7 @@
         ],
     ];
 
-    // ✅ EXACTO lo que tu documento dice como "NO CUBRE"
+    //  EXACTO lo que tu documento dice como "NO CUBRE"
     $razonesNoCubre = [
         'Uso / cuidado del cliente' => [
             'danos_transporte_uso_indebido_maltrato_negligencia_manipulacion_mantenimiento' =>

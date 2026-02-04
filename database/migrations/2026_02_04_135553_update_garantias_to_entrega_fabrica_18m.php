@@ -27,7 +27,7 @@ return new class extends Migration
 
         // 3) Crear la FK (solo si no existe)
         Schema::table('garantias', function (Blueprint $table) {
-            // ⚠️ no uses try/catch aquí para “tapar” errores.
+            //  no uses try/catch aquí para “tapar” errores.
             // Mejor: creamos la FK y si ya existe, Laravel te avisará y lo arreglamos bien.
 
             $table->foreign('producto_id')
