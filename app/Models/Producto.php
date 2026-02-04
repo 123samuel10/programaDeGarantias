@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
@@ -12,11 +12,16 @@ class Producto extends Model
     protected $table = 'productos';
 
     protected $fillable = [
-        'marca','modelo','descripcion','tipo_equipo'
+        'marca',
+        'modelo',
+        'nombre_producto',
+        'tipo_equipo',
+        'descripcion',
+        'foto',
+        'repisas_iluminadas',
+        'refrigerante',
+        'longitud',
+        'profundidad',
+        'altura',
     ];
-
-    public function garantias()
-    {
-        return $this->hasMany(\App\Models\Garantia::class);
-    }
 }

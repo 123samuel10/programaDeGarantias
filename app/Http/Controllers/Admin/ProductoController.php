@@ -45,21 +45,33 @@ class ProductoController extends Controller
         return view('admin.productos.create');
     }
 
-    public function store(Request $request)
-    {
-        $this->validarAdmin();
+ public function store(Request $request)
+{
+    $this->validarAdmin();
 
-        $data = $request->validate([
-            'marca' => 'nullable|string|max:255',
-            'modelo' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string|max:255',
-            'tipo_equipo' => 'nullable|string|max:255',
-        ]);
+    $data = $request->validate([
+        'marca' => 'required|string|max:255',
+        'modelo' => 'required|string|max:255',
+        'nombre_producto' => 'required|string|max:255',
 
-        Producto::create($data);
+        'descripcion' => 'nullable|string',
+        'foto' => 'nullable|string',
 
-        return redirect()->route('admin.productos.index')->with('success', 'Producto creado.');
-    }
+        'repisas_iluminadas' => 'nullable|integer|min:0',
+        'refrigerante' => 'nullable|string|max:100',
+
+        'longitud' => 'nullable|integer',
+        'profundidad' => 'nullable|integer',
+        'altura' => 'nullable|integer',
+    ]);
+
+    Producto::create($data);
+
+    return redirect()
+        ->route('admin.productos.index')
+        ->with('success', 'Producto creado correctamente.');
+}
+
 
     public function edit(Producto $producto)
     {
@@ -67,21 +79,31 @@ class ProductoController extends Controller
         return view('admin.productos.edit', compact('producto'));
     }
 
-    public function update(Request $request, Producto $producto)
-    {
-        $this->validarAdmin();
+  public function update(Request $request, Producto $producto)
+{
+    $this->validarAdmin();
 
-        $data = $request->validate([
-            'marca' => 'nullable|string|max:255',
-            'modelo' => 'nullable|string|max:255',
-            'descripcion' => 'nullable|string|max:255',
-            'tipo_equipo' => 'nullable|string|max:255',
-        ]);
+    $data = $request->validate([
+        'marca' => 'required|string|max:255',
+        'modelo' => 'required|string|max:255',
+        'nombre_producto' => 'required|string|max:255',
 
-        $producto->update($data);
+        'descripcion' => 'nullable|string',
+        'foto' => 'nullable|string',
 
-        return back()->with('success', 'Producto actualizado.');
-    }
+        'repisas_iluminadas' => 'nullable|integer|min:0',
+        'refrigerante' => 'nullable|string|max:100',
+
+        'longitud' => 'nullable|integer',
+        'profundidad' => 'nullable|integer',
+        'altura' => 'nullable|integer',
+    ]);
+
+    $producto->update($data);
+
+    return back()->with('success', 'Producto actualizado.');
+}
+
 
     public function destroy(Producto $producto)
     {
