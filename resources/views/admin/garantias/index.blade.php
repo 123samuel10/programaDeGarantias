@@ -1,3 +1,4 @@
+{{-- resources/views/admin/garantias/index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-3">
@@ -81,6 +82,7 @@
                             <tr>
                                 <th class="px-5 py-3 text-left font-semibold">Serie</th>
                                 <th class="px-5 py-3 text-left font-semibold">Cliente</th>
+                                <th class="px-5 py-3 text-left font-semibold">Producto</th>
                                 <th class="px-5 py-3 text-left font-semibold">Fechas</th>
                                 <th class="px-5 py-3 text-left font-semibold">Estado</th>
                                 <th class="px-5 py-3 text-right font-semibold">Acciones</th>
@@ -91,8 +93,11 @@
                             @forelse($garantias as $g)
                                 @php
                                     $cliente = $g->cliente;
+                                    $p = $g->producto;
+
                                     $nombre = $cliente?->nombre_contacto ?? '—';
                                     $empresa = $cliente?->empresa;
+
                                     $badge = [
                                         'activa' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
                                         'enproceso' => 'bg-blue-50 text-blue-700 border-blue-100',
@@ -100,14 +105,32 @@
                                         'cerrada' => 'bg-gray-100 text-gray-700 border-gray-200',
                                         'rechazada' => 'bg-red-50 text-red-700 border-red-100',
                                     ][$g->estado] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+
+                                    // Foto del producto: tu campo es string; puede ser URL o ruta de storage
+                                    $fotoUrl = null;
+                                    if ($p && $p->foto) {
+                                        $fotoUrl = (str_starts_with($p->foto, 'http://') || str_starts_with($p->foto, 'https://'))
+                                            ? $p->foto
+                                            : asset('storage/'.$p->foto);
+                                    }
+
+                                    $dims = null;
+                                    if ($p) {
+                                        $l = $p->longitud;
+                                        $pr = $p->profundidad;
+                                        $a = $p->altura;
+                                        $dims = trim(($l ? $l.' cm' : '—').' × '.($pr ? $pr.' cm' : '—').' × '.($a ? $a.' cm' : '—'));
+                                    }
                                 @endphp
 
-                                <tr class="hover:bg-gray-50/60 transition">
+                                <tr class="hover:bg-gray-50/60 transition align-top">
+                                    {{-- Serie --}}
                                     <td class="px-5 py-4">
                                         <div class="font-semibold text-gray-900">{{ $g->numero_serie }}</div>
-                                        <div class="text-xs text-gray-500">ID: {{ $g->id }}</div>
+                                        <div class="text-xs text-gray-500">Caso #{{ $g->id }}</div>
                                     </td>
 
+                                    {{-- Cliente --}}
                                     <td class="px-5 py-4">
                                         <div class="font-semibold text-gray-900 truncate">{{ $nombre }}</div>
                                         <div class="text-xs text-gray-500 truncate">
@@ -115,17 +138,96 @@
                                         </div>
                                     </td>
 
+                                    {{-- Producto (ficha completa) --}}
                                     <td class="px-5 py-4">
-                                        <div class="text-gray-900">Compra: {{ optional($g->fecha_compra)->format('Y-m-d') }}</div>
-                                        <div class="text-xs text-gray-500">Vence: {{ optional($g->fecha_vencimiento)->format('Y-m-d') }}</div>
+                                        @if($p)
+                                            <div class="flex items-start gap-4 min-w-[340px]">
+                                                <div class="w-14 h-14 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                                    @if($fotoUrl)
+                                                        <img src="{{ $fotoUrl }}" alt="Foto producto" class="w-full h-full object-cover">
+                                                    @else
+                                                        <svg class="w-7 h-7 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                                            <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z"
+                                                                  stroke="currentColor" stroke-width="1.8"/>
+                                                            <path d="M8 10.5h8M8 13.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                        </svg>
+                                                    @endif
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <div class="font-semibold text-gray-900 leading-5">
+                                                        {{ $p->nombre_producto ?: 'Producto sin nombre' }}
+                                                    </div>
+
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        <span class="font-medium text-gray-700">{{ $p->marca ?: '—' }}</span>
+                                                        <span class="text-gray-400">·</span>
+                                                        Modelo: <span class="font-medium text-gray-700">{{ $p->modelo ?: '—' }}</span>
+                                                    </div>
+
+                                                    <div class="mt-2 grid grid-cols-1 gap-2">
+                                                        <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                                            <div class="flex flex-wrap gap-2">
+                                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-blue-50 text-blue-700 border-blue-100">
+                                                                    ID producto #{{ $p->id }}
+                                                                </span>
+
+                                                                @if(!is_null($p->repisas_iluminadas))
+                                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-gray-100 text-gray-700 border-gray-200">
+                                                                        Repisas: {{ $p->repisas_iluminadas }}
+                                                                    </span>
+                                                                @endif
+
+                                                                @if($p->refrigerante)
+                                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-gray-100 text-gray-700 border-gray-200">
+                                                                        Ref: {{ $p->refrigerante }}
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+
+                                                            <div class="mt-2 text-xs text-gray-600">
+                                                                <span class="text-gray-500">Medidas:</span>
+                                                                <span class="font-semibold text-gray-900">{{ $dims }}</span>
+                                                            </div>
+
+                                                            @if($p->descripcion)
+                                                                <div class="mt-2 text-xs text-gray-600 line-clamp-2">
+                                                                    {{ $p->descripcion }}
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 min-w-[340px]">
+                                                <div class="font-semibold text-gray-900">Sin producto asociado</div>
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Puedes asociar un producto editando la garantía.
+                                                </div>
+                                            </div>
+                                        @endif
                                     </td>
 
+                                    {{-- Fechas --}}
+                                    <td class="px-5 py-4">
+                                        <div class="text-gray-900">
+                                            Entrega fábrica:
+                                            {{ optional($g->fecha_entrega_fabrica)->format('Y-m-d') }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            Vence: {{ optional($g->fecha_vencimiento)->format('Y-m-d') }}
+                                        </div>
+                                    </td>
+
+                                    {{-- Estado --}}
                                     <td class="px-5 py-4">
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {{ $badge }}">
                                             {{ strtoupper($g->estado) }}
                                         </span>
                                     </td>
 
+                                    {{-- Acciones --}}
                                     <td class="px-5 py-4 text-right">
                                         <div class="inline-flex gap-2" x-data="{ openDelete:false }">
                                             <a href="{{ route('admin.garantias.show', $g) }}"
@@ -194,11 +296,10 @@
 
                                         </div>
                                     </td>
-
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-14 text-center">
+                                    <td colspan="6" class="px-6 py-14 text-center">
                                         <div class="font-semibold text-gray-900">No hay garantías registradas</div>
                                         <div class="text-sm text-gray-500 mt-1">Crea la primera garantía para iniciar el control.</div>
                                         <a href="{{ route('admin.garantias.create') }}"

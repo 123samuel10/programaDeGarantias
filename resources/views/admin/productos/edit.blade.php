@@ -33,6 +33,7 @@
             @endif
 
             <form method="POST" action="{{ route('admin.productos.update', $producto) }}"
+                  enctype="multipart/form-data"
                   class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 @csrf
                 @method('PUT')

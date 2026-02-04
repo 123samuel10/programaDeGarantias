@@ -27,6 +27,7 @@
             @endif
 
             <form method="POST" action="{{ route('admin.productos.store') }}"
+                  enctype="multipart/form-data"
                   class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 @csrf
 
