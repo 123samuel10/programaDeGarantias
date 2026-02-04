@@ -139,31 +139,7 @@
     </div>
 
     {{-- Motivo + Notas --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-1">
-            <label class="text-sm font-semibold text-gray-700">Detalle</label>
-            <p class="text-xs text-gray-500 mt-1">Descripción general del caso.</p>
-        </div>
 
-        <div class="lg:col-span-2 space-y-4">
-            <div>
-                <label class="text-sm font-medium text-gray-700">Motivo (opcional)</label>
-                <input name="motivo"
-                       value="{{ old('motivo', $modoEdicion ? $garantia->motivo : null) }}"
-                       class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                       placeholder="Ej: Falla de compresor, fuga, ruido anormal…">
-                @error('motivo') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="text-sm font-medium text-gray-700">Notas internas (opcional)</label>
-                <textarea name="notas" rows="4"
-                          class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="Observaciones internas…">{{ old('notas', $modoEdicion ? $garantia->notas : null) }}</textarea>
-                @error('notas') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-        </div>
-    </div>
 
 </div>
 
