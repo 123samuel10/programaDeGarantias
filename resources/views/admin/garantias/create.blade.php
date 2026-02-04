@@ -3,7 +3,7 @@
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
                 <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Nueva garantía</h2>
-                <p class="text-sm text-gray-600">Registra un caso de garantía con datos completos y trazabilidad.</p>
+                <p class="text-sm text-gray-600">Norma: 18 meses desde entrega en fábrica.</p>
             </div>
 
             <a href="{{ route('admin.garantias.index') }}"
@@ -31,10 +31,10 @@
 
                 <div class="p-6 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">Información de la garantía</h3>
-                    <p class="text-sm text-gray-500 mt-1">La fecha de vencimiento se calcula con compra + meses.</p>
+                    <p class="text-sm text-gray-500 mt-1">El vencimiento se calcula automáticamente.</p>
                 </div>
 
-                @include('admin.garantias._form', ['clientes' => $clientes])
+                @include('admin.garantias._form', ['clientes' => $clientes, 'productos' => $productos])
 
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                     <p class="text-xs text-gray-500">* Campos obligatorios</p>

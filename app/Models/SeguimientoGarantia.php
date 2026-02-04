@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SeguimientoGarantia extends Model
 {
- use HasFactory;
+    use HasFactory;
 
     protected $table = 'seguimiento_garantias';
 
@@ -15,7 +15,17 @@ class SeguimientoGarantia extends Model
         'garantia_id',
         'estado',
         'nota',
+
+        // NUEVO
+        'informe_tecnico',
+        'fotos',
+
+        // legado
         'archivo',
+    ];
+
+    protected $casts = [
+        'fotos' => 'array',
     ];
 
     public function garantia()

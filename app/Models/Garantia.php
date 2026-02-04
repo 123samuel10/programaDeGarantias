@@ -1,5 +1,5 @@
 <?php
-// app/Models/Garantia.php  (CORREGIDO)
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,13 @@ class Garantia extends Model
         'cliente_id',
         'producto_id',
         'numero_serie',
+
+        // NUEVO (norma)
+        'fecha_entrega_fabrica',
+
+        // se mantiene por compatibilidad
         'fecha_compra',
+
         'fecha_vencimiento',
         'meses_garantia',
         'motivo',
@@ -24,13 +30,19 @@ class Garantia extends Model
     ];
 
     protected $casts = [
-        'fecha_compra'      => 'date',
-        'fecha_vencimiento' => 'date',
+        'fecha_compra'         => 'date',
+        'fecha_entrega_fabrica'=> 'date',
+        'fecha_vencimiento'    => 'date',
     ];
 
     public function cliente()
     {
         return $this->belongsTo(\App\Models\Cliente::class);
+    }
+
+    public function producto()
+    {
+        return $this->belongsTo(\App\Models\Producto::class);
     }
 
     public function seguimientos()
@@ -49,13 +61,6 @@ class Garantia extends Model
         return now()->startOfDay()->gt($this->fecha_vencimiento->startOfDay());
     }
 
-    /**
-     * ✅ Estado MACRO consistente:
-     * - cerrada/rechazada: no se toca
-     * - si venció por fecha: vencida
-     * - si tiene seguimientos: enproceso
-     * - si no: activa
-     */
     public function sincronizarEstadoMacro(): void
     {
         if ($this->esFinal()) return;

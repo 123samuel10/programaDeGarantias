@@ -1,6 +1,24 @@
 {{-- resources/views/admin/garantias/_form.blade.php --}}
 @php
     $modoEdicion = isset($garantia);
+
+    $estadoActual = old('estado', $modoEdicion ? ($garantia->estado ?? 'activa') : 'activa');
+
+    $estadoLabels = [
+        'activa' => 'Activa',
+        'enproceso' => 'En proceso',
+        'vencida' => 'Vencida',
+        'cerrada' => 'Cerrada',
+        'rechazada' => 'Rechazada',
+    ];
+
+    $estadoBadge = [
+        'activa' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+        'enproceso' => 'bg-blue-50 text-blue-700 border-blue-100',
+        'vencida' => 'bg-amber-50 text-amber-800 border-amber-100',
+        'cerrada' => 'bg-gray-100 text-gray-700 border-gray-200',
+        'rechazada' => 'bg-red-50 text-red-700 border-red-100',
+    ][$estadoActual] ?? 'bg-gray-100 text-gray-700 border-gray-200';
 @endphp
 
 <div class="p-6 space-y-6">
@@ -9,7 +27,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-1">
             <label class="text-sm font-semibold text-gray-700">Cliente *</label>
-            <p class="text-xs text-gray-500 mt-1">Selecciona el cliente dueño de la garantía.</p>
+            <p class="text-xs text-gray-500 mt-1">Selecciona el titular de la garantía.</p>
         </div>
 
         <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -35,17 +53,23 @@
 
             <div>
                 <label class="text-sm font-medium text-gray-700">Producto (opcional)</label>
-                <input name="producto_id"
-                       value="{{ old('producto_id', $modoEdicion ? $garantia->producto_id : null) }}"
-                       class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                       placeholder="ID producto (si aplica)">
+                <select name="producto_id"
+                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">— Sin producto —</option>
+                    @foreach($productos as $p)
+                        <option value="{{ $p->id }}"
+                            @selected(old('producto_id', $modoEdicion ? $garantia->producto_id : null) == $p->id)>
+                            {{ ($p->modelo ?: 'Sin modelo') }} {{ $p->marca ? '· '.$p->marca : '' }}
+                        </option>
+                    @endforeach
+                </select>
                 @error('producto_id') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-gray-500 mt-1">Luego lo mejoramos a selector por nombre/marca.</p>
+                <p class="text-xs text-gray-500 mt-1">Según documento: placa/modelo y descripción ayudan al diagnóstico.</p>
             </div>
         </div>
     </div>
 
-    {{-- Serie + Estado --}}
+    {{-- Serie + Estado (solo lectura) --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-1">
             <label class="text-sm font-semibold text-gray-700">Identificación</label>
@@ -61,70 +85,58 @@
                        placeholder="Ej: SN-REF-000123"
                        required>
                 @error('numero_serie') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-gray-500 mt-1">Debe ser único (no se repite).</p>
             </div>
 
             <div>
-                <label class="text-sm font-medium text-gray-700">Estado *</label>
-                <select name="estado"
-                        class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                        required>
-                    @foreach(['activa','enproceso','vencida','cerrada','rechazada'] as $e)
-                        <option value="{{ $e }}" @selected(old('estado', $modoEdicion ? $garantia->estado : 'activa') === $e)>
-                            {{ strtoupper($e) }}
-                        </option>
-                    @endforeach
-                </select>
+                <label class="text-sm font-medium text-gray-700">Estado (auto)</label>
+
+                {{-- Badge solo lectura --}}
+                <div class="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {{ $estadoBadge }}">
+                        {{ $estadoLabels[$estadoActual] ?? strtoupper($estadoActual) }}
+                    </span>
+                    <p class="text-xs text-gray-500 mt-2">
+                        El estado se ajusta automáticamente por vencimiento y seguimientos (cerrada / rechazada son finales).
+                    </p>
+                </div>
+
+                {{-- Mantener valor para compatibilidad (si tu controlador aún lo valida en update) --}}
+                <input type="hidden" name="estado" value="{{ $estadoActual }}">
                 @error('estado') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
     </div>
 
-    {{-- Fechas (CAMBIO PRO): compra + vencimiento, meses calculados --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    {{-- Fecha entrega fábrica (NORMA) + vencimiento calculado --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4"
+         x-data="garantiaNormaFechas()"
+         x-init="init()">
         <div class="lg:col-span-1">
-            <label class="text-sm font-semibold text-gray-700">Fechas</label>
-            <p class="text-xs text-gray-500 mt-1">
-                El admin define la fecha de compra y hasta cuándo aplica la garantía.
-            </p>
+            <label class="text-sm font-semibold text-gray-700">Fechas (norma)</label>
+            <p class="text-xs text-gray-500 mt-1">La garantía es de 18 meses desde entrega en fábrica.</p>
         </div>
 
-        <div class="lg:col-span-2"
-             x-data="garantiaFechas()"
-             x-init="init()">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {{-- Fecha compra --}}
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Fecha de compra *</label>
-                    <input type="date"
-                           name="fecha_compra"
-                           x-model="fechaCompra"
-                           @change="recalcular()"
-                           value="{{ old('fecha_compra', $modoEdicion && $garantia->fecha_compra ? $garantia->fecha_compra->format('Y-m-d') : '') }}"
-                           class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                           required>
-                    @error('fecha_compra') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Vence el --}}
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Vence el *</label>
-                    <input type="date"
-                           name="fecha_vencimiento"
-                           x-model="fechaVencimiento"
-                           @change="recalcular()"
-                           value="{{ old('fecha_vencimiento', $modoEdicion && $garantia->fecha_vencimiento ? $garantia->fecha_vencimiento->format('Y-m-d') : '') }}"
-                           class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                           required>
-                    @error('fecha_vencimiento') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                </div>
+        <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-700">Entrega en fábrica *</label>
+                <input type="date"
+                       name="fecha_entrega_fabrica"
+                       x-model="entrega"
+                       @change="recalcular()"
+                       value="{{ old('fecha_entrega_fabrica', $modoEdicion && $garantia->fecha_entrega_fabrica ? $garantia->fecha_entrega_fabrica->format('Y-m-d') : '') }}"
+                       class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                       required>
+                @error('fecha_entrega_fabrica') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
-
-
-
-
+            <div>
+                <label class="text-sm font-medium text-gray-700">Vencimiento (auto)</label>
+                <input type="text"
+                       x-model="vence"
+                       readonly
+                       class="mt-1 w-full rounded-xl border-gray-200 bg-gray-50 text-gray-900">
+                <p class="text-xs text-gray-500 mt-1" x-text="mensaje"></p>
+            </div>
         </div>
     </div>
 
@@ -132,7 +144,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-1">
             <label class="text-sm font-semibold text-gray-700">Detalle</label>
-            <p class="text-xs text-gray-500 mt-1">Motivo y notas internas del caso.</p>
+            <p class="text-xs text-gray-500 mt-1">Descripción general del caso.</p>
         </div>
 
         <div class="lg:col-span-2 space-y-4">
@@ -146,7 +158,7 @@
             </div>
 
             <div>
-                <label class="text-sm font-medium text-gray-700">Notas (opcional)</label>
+                <label class="text-sm font-medium text-gray-700">Notas internas (opcional)</label>
                 <textarea name="notas" rows="4"
                           class="mt-1 w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                           placeholder="Observaciones internas…">{{ old('notas', $modoEdicion ? $garantia->notas : null) }}</textarea>
@@ -157,48 +169,39 @@
 
 </div>
 
-{{-- Alpine helper (sin librerías extra, solo Alpine que ya usas) --}}
 <script>
-    function garantiaFechas() {
+    function garantiaNormaFechas() {
         return {
-            fechaCompra: @json(old('fecha_compra', $modoEdicion && $garantia->fecha_compra ? $garantia->fecha_compra->format('Y-m-d') : null)),
-            fechaVencimiento: @json(old('fecha_vencimiento', $modoEdicion && $garantia->fecha_vencimiento ? $garantia->fecha_vencimiento->format('Y-m-d') : null)),
-            mesesGarantia: @json(old('meses_garantia', $modoEdicion ? (int)($garantia->meses_garantia ?? 12) : 12)),
+            entrega: @json(old('fecha_entrega_fabrica', $modoEdicion && $garantia->fecha_entrega_fabrica ? $garantia->fecha_entrega_fabrica->format('Y-m-d') : null)),
+            vence: '',
             mensaje: '',
 
-            init() {
-                this.recalcular();
-            },
+            init() { this.recalcular(); },
 
-            sumarMeses(m) {
-                if (!this.fechaCompra) {
-                    this.mensaje = 'Primero selecciona la fecha de compra.';
-                    return;
-                }
-                const d = new Date(this.fechaCompra + 'T00:00:00');
-                d.setMonth(d.getMonth() + m);
-                this.fechaVencimiento = d.toISOString().slice(0, 10);
-                this.recalcular();
+            // ✅ Suma meses sin overflow (más estable que setMonth directo)
+            addMonthsNoOverflow(dateStr, months) {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const targetMonth = (m - 1) + months;
+
+                const ny = y + Math.floor(targetMonth / 12);
+                const nm = (targetMonth % 12 + 12) % 12; // 0-11
+
+                const lastDay = new Date(ny, nm + 1, 0).getDate();
+                const nd = Math.min(d, lastDay);
+
+                const out = new Date(ny, nm, nd);
+                const yyyy = out.getFullYear();
+                const mm = String(out.getMonth() + 1).padStart(2, '0');
+                const dd = String(out.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
             },
 
             recalcular() {
                 this.mensaje = '';
+                if (!this.entrega) { this.vence = ''; return; }
 
-                if (!this.fechaCompra || !this.fechaVencimiento) return;
-
-                const a = new Date(this.fechaCompra + 'T00:00:00');
-                const b = new Date(this.fechaVencimiento + 'T00:00:00');
-
-                if (b < a) {
-                    this.mensaje = 'La fecha de vencimiento no puede ser anterior a la compra.';
-                    this.mesesGarantia = 0;
-                    return;
-                }
-
-                const months = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
-                this.mesesGarantia = Math.max(1, months || 1);
-
-                this.mensaje = `Garantía calculada: ${this.mesesGarantia} mes(es).`;
+                this.vence = this.addMonthsNoOverflow(this.entrega, 18);
+                this.mensaje = 'Garantía estándar: 18 meses desde entrega en fábrica.';
             }
         }
     }

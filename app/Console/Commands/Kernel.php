@@ -1,5 +1,19 @@
-protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule)
+<?php
+
+namespace App\Console;
+
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+
+class Kernel extends ConsoleKernel
 {
-    // ✅ Corre todos los días a las 00:05
-    $schedule->command('garantias:marcar-vencidas')->dailyAt('00:05');
+    protected function schedule(Schedule $schedule): void
+    {
+        $schedule->command('garantias:marcar-vencidas')->dailyAt('00:05');
+    }
+
+    protected function commands(): void
+    {
+        $this->load(__DIR__.'/Commands');
+    }
 }

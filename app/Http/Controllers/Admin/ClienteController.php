@@ -16,6 +16,7 @@ class ClienteController extends Controller
         }
     }
 
+
     public function index(Request $request)
     {
         $this->validarAdmin();

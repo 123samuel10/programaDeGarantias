@@ -3,7 +3,7 @@
         <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
                 <h2 class="text-xl sm:text-2xl font-semibold text-gray-900">Editar garantía</h2>
-                <p class="text-sm text-gray-600">Actualiza información del caso.</p>
+                <p class="text-sm text-gray-600">Norma: 18 meses desde entrega en fábrica.</p>
             </div>
 
             <div class="flex gap-2">
@@ -48,10 +48,10 @@
 
                 <div class="p-6 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-900">Datos del caso</h3>
-                    <p class="text-sm text-gray-500 mt-1">Cualquier cambio en fechas recalcula el vencimiento.</p>
+                    <p class="text-sm text-gray-500 mt-1">El vencimiento se recalcula automáticamente.</p>
                 </div>
 
-                @include('admin.garantias._form', ['clientes' => $clientes, 'garantia' => $garantia])
+                @include('admin.garantias._form', ['clientes' => $clientes, 'productos' => $productos, 'garantia' => $garantia])
 
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                     <p class="text-xs text-gray-500">Actualiza y guarda cambios.</p>
